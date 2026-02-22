@@ -1,0 +1,136 @@
+# sane — CLI dispatcher (autoloaded via FPATH)
+#
+# Usage:
+#   sane bind <key> <handler> [insert|command|any]
+#   sane unbind <key> [insert|command|any]
+#   sane abbr add <name> <expansion...>
+#   sane abbr rm <name>
+#   sane abbr list
+#   sane mark add <name> [dir]
+#   sane mark rm <name>
+#   sane mark list
+#   sane hook list [event]
+#   sane stack
+#   sane help
+
+function sane {
+    typeset cmd="${1:-help}"; shift 2>/dev/null
+
+    case "$cmd" in
+
+    # -- Keybindings ----------------------------------------------------------
+    bind)
+        (( $# < 2 )) && { print -u2 "usage: sane bind <key> <handler> [insert|command|any]"; return 2; }
+        sane_bind "$@"
+        ;;
+    unbind)
+        (( $# < 1 )) && { print -u2 "usage: sane unbind <key> [insert|command|any]"; return 2; }
+        sane_unbind "$@"
+        ;;
+
+    # -- Abbreviations --------------------------------------------------------
+    abbr)
+        typeset sub="${1:-list}"; shift 2>/dev/null
+        case "$sub" in
+        add)
+            (( $# < 2 )) && { print -u2 "usage: sane abbr add <name> <expansion...>"; return 2; }
+            _sane_abbr_add "$@"
+            ;;
+        rm|remove)
+            (( $# < 1 )) && { print -u2 "usage: sane abbr rm <name>"; return 2; }
+            _sane_abbr_remove "$1"
+            ;;
+        list)
+            _sane_abbr_list
+            ;;
+        *)
+            print -u2 "sane: abbr: unknown subcommand: $sub"
+            return 2
+            ;;
+        esac
+        ;;
+
+    # -- Bookmarks ------------------------------------------------------------
+    mark)
+        typeset sub="${1:-list}"; shift 2>/dev/null
+        case "$sub" in
+        add)
+            (( $# < 1 )) && { print -u2 "usage: sane mark add <name> [dir]"; return 2; }
+            _sane_mark_add "$@"
+            ;;
+        rm|remove)
+            (( $# < 1 )) && { print -u2 "usage: sane mark rm <name>"; return 2; }
+            _sane_mark_remove "$1"
+            ;;
+        list)
+            _sane_mark_list
+            ;;
+        *)
+            print -u2 "sane: mark: unknown subcommand: $sub"
+            return 2
+            ;;
+        esac
+        ;;
+
+    # -- Hooks ----------------------------------------------------------------
+    hook)
+        typeset sub="${1:-list}"; shift 2>/dev/null
+        case "$sub" in
+        list)
+            typeset event="${1:-}"
+            if [[ -n "$event" ]]; then
+                if [[ -z "${_SANE_HOOKS[$event]+set}" ]]; then
+                    print "No handlers for: $event"
+                    return 0
+                fi
+                print "$event:"
+                typeset -i i n=${#_SANE_HOOKS[$event].handlers[@]}
+                for (( i = 0; i < n; i++ )); do
+                    print "  ${_SANE_HOOKS[$event].handlers[i]}"
+                done
+            else
+                typeset ev
+                for ev in "${!_SANE_HOOKS[@]}"; do
+                    typeset -i n=${#_SANE_HOOKS[$ev].handlers[@]}
+                    print "${ev} (${n} handler$( (( n != 1 )) && print s))"
+                done
+            fi
+            ;;
+        *)
+            print -u2 "sane: hook: unknown subcommand: $sub"
+            return 2
+            ;;
+        esac
+        ;;
+
+    # -- Directory stack ------------------------------------------------------
+    stack)
+        _sane_dirstack_list
+        ;;
+
+    # -- Help -----------------------------------------------------------------
+    help)
+        print 'Usage: sane <command> [args]
+
+Commands:
+  bind <key> <handler> [mode]   Bind a key to a handler function
+  unbind <key> [mode]           Remove a keybinding
+  abbr add <name> <expansion>   Add an abbreviation
+  abbr rm <name>                Remove an abbreviation
+  abbr list                     List all abbreviations
+  mark add <name> [dir]         Bookmark a directory (default: $PWD)
+  mark rm <name>                Remove a bookmark
+  mark list                     List all bookmarks
+  stack                         Show directory stack
+  hook list [event]             Show registered hook handlers
+  help                          Show this message
+
+Modes: insert (default), command, any'
+        ;;
+
+    *)
+        print -u2 "sane: unknown command: $cmd (try 'sane help')"
+        return 2
+        ;;
+    esac
+}
