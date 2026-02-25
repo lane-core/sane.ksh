@@ -71,7 +71,7 @@ function _sane_ps1_hook.get {
     _sane_fire precmd
     .sh.value=""
 }
-PS1="${_sane_ps1_hook}${PS1}"
+PS1="${_sane_ps1_hook}${PS1:-\$ }"
 
 # -- Chain DEBUG trap (preexec) -----------------------------------------------
 # Capture existing trap (e.g. pure.ksh's _pure_preexec), compose with ours.
@@ -116,7 +116,7 @@ if typeset -f _pack_hook >/dev/null 2>&1; then
 fi
 
 # -- FPATH + autoload ---------------------------------------------------------
-FPATH="${_SANE_ROOT}/functions:${FPATH}"
+FPATH="${_SANE_ROOT}/functions${FPATH:+:${FPATH}}"
 autoload sane
 
 _SANE_KSH_INIT=1
