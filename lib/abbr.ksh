@@ -48,7 +48,7 @@ function _sane_abbr_expand {
 
     # Position check: if command mode, only expand the first token
     if [[ "$_SANE_ABBR_POSITION" == command ]]; then
-        if [[ "$prefix" == *[! ]* ]]; then
+        if [[ "$prefix" == *[^[:space:]]* ]]; then
             _sane_inject "$trigger"
             return
         fi
