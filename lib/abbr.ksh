@@ -83,10 +83,14 @@ function _sane_abbr_init {
 function _sane_abbr_add {
     typeset name="$1"; shift
     typeset expansion="$*"
+
+    # Newlines in expansions break the inject buffer (editor submits mid-inject)
+    expansion="${expansion//$'\n'/ }"
+
     _SANE_ABBR[$name]="$expansion"
 
     # Remove existing entry first to avoid duplicates in persistence file
-    _sane_abbr_remove "$name" 2>/dev/null
+    _sane_abbr_remove "$name"
 
     # Persist to user abbreviation file
     typeset abbr_file="${XDG_CONFIG_HOME:-$HOME/.config}/ksh/sane/abbr.ksh"
@@ -107,7 +111,7 @@ function _sane_abbr_remove {
     typeset tmp="${abbr_file}.tmp"
     typeset line
     while IFS= read -r line; do
-        [[ "$line" == "_SANE_ABBR[${name}]="* ]] && continue
+        [[ "$line" == "_SANE_ABBR\[${name}\]="* ]] && continue
         print -r -- "$line"
     done < "$abbr_file" > "$tmp"
     command mv -f "$tmp" "$abbr_file"

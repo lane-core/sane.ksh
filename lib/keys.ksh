@@ -119,11 +119,11 @@ function _sane_keybd_dispatch {
     # Check for timeout on pending sequence
     if [[ -n "$_SANE_KEY_SEQ" ]]; then
         if (( now - _SANE_KEY_SEQ_TIME > _SANE_KEY_SEQ_TIMEOUT )); then
-            # Timed out: replay first accumulated char, keep rest + current
-            # char for next KEYBD invocations
+            # Timed out: replay first char now, drain rest + current via inject
+            typeset flush="${_SANE_KEY_SEQ:1}${char}"
             .sh.edchar="${_SANE_KEY_SEQ:0:1}"
-            _SANE_KEY_SEQ="${_SANE_KEY_SEQ:1}${char}"
-            _SANE_KEY_SEQ_TIME=$now
+            _SANE_KEY_SEQ=''
+            _SANE_INJECT_BUF="${flush}${_SANE_INJECT_BUF}"
             return
         fi
     fi
@@ -154,11 +154,13 @@ function _sane_keybd_dispatch {
         return
     fi
 
-    # No match — replay first accumulated char, keep rest + current char
+    # No match — replay first char now, drain rest + current via inject buffer
     if [[ -n "$_SANE_KEY_SEQ" ]]; then
+        typeset flush="${_SANE_KEY_SEQ:1}${char}"
         .sh.edchar="${_SANE_KEY_SEQ:0:1}"
-        _SANE_KEY_SEQ="${_SANE_KEY_SEQ:1}${char}"
-        _SANE_KEY_SEQ_TIME=$now
+        _SANE_KEY_SEQ=''
+        _SANE_INJECT_BUF="${flush}${_SANE_INJECT_BUF}"
+        return
     fi
     # If no sequence was pending, .sh.edchar is untouched — pass through
 }

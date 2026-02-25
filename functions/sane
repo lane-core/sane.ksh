@@ -89,10 +89,11 @@ function sane {
                     print "  ${_SANE_HOOKS[$event].handlers[i]}"
                 done
             else
-                typeset ev
+                typeset ev suffix
                 for ev in "${!_SANE_HOOKS[@]}"; do
                     typeset -i n=${#_SANE_HOOKS[$ev].handlers[@]}
-                    print "${ev} (${n} handler$( (( n != 1 )) && print s))"
+                    suffix=''; (( n != 1 )) && suffix=s
+                    print "${ev} (${n} handler${suffix})"
                 done
             fi
             ;;

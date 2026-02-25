@@ -52,8 +52,16 @@ function _sane_chpwd_handler {
 
 # -- The cd replacement -------------------------------------------------------
 function cd {
-    typeset target="$1"
     typeset old="$PWD"
+
+    # Pass-through: flags (-L, -P) and multi-arg forms go straight to builtin
+    if (( $# > 1 )) || [[ "${1:-}" == -[LP] ]]; then
+        builtin cd "$@" || return
+        _sane_fire chpwd "$old" "$PWD"
+        return
+    fi
+
+    typeset target="$1"
 
     # cd with no args → home
     if [[ -z "$target" ]]; then

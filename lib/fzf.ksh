@@ -41,28 +41,33 @@ function _sane_fzf_load_config {
 
 # -- Ctrl-R: history search --------------------------------------------------
 function _sane_fzf_history {
-    typeset result
-    result=$(fc -lnr 1 | ${_SANE_FZF_CMD} --query="${.sh.edtext}" +m) || {
+    typeset result prefix=''
+    # In vi command mode, Ctrl-U is not "kill line" — enter insert mode first
+    [[ "${.sh.edmode}" == $'\E' ]] && prefix=$'a'
+    # Store query in a variable; reference via \$_q so eval doesn't double-expand it
+    typeset _q="${.sh.edtext}"
+    result=$(fc -lnr 1 | eval "${_SANE_FZF_CMD} --query=\"\$_q\" +m") || {
         # User cancelled — redraw
         _sane_inject $'\014'
         return
     }
     # Kill current line, inject selected command, redraw
-    _sane_inject $'\025'"${result}"$'\014'
+    _sane_inject "${prefix}"$'\025'"${result}"$'\014'
 }
 
 # -- Ctrl-T: file finder -----------------------------------------------------
 function _sane_fzf_file {
     typeset result
-    result=$(eval "$_SANE_FZF_FILE_CMD" | ${_SANE_FZF_CMD} -m) || {
+    result=$(eval "$_SANE_FZF_FILE_CMD" | eval "${_SANE_FZF_CMD} -m") || {
         _sane_inject $'\014'
         return
     }
     # Quote each selected path separately (multi-select returns newline-separated)
-    typeset qresult='' f
+    typeset qresult='' f quoted
     while IFS= read -r f; do
         [[ -z "$f" ]] && continue
-        qresult+="$(printf '%q' "$f") "
+        printf -v quoted '%q' "$f"
+        qresult+="$quoted "
     done <<< "$result"
     qresult="${qresult% }"
     _sane_inject "${qresult}"$'\014'
@@ -71,7 +76,7 @@ function _sane_fzf_file {
 # -- Alt-C: cd to directory ---------------------------------------------------
 function _sane_fzf_cd {
     typeset result
-    result=$(eval "$_SANE_FZF_DIR_CMD" | ${_SANE_FZF_CMD} +m) || {
+    result=$(eval "$_SANE_FZF_DIR_CMD" | eval "${_SANE_FZF_CMD} +m") || {
         _sane_inject $'\014'
         return
     }

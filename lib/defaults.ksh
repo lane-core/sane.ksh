@@ -14,7 +14,7 @@ function _sane_apply_defaults {
     set --nobackslashctrl    # prevent backslash eating arrow keys
 
     # macOS: case-insensitive globbing on HFS+/APFS
-    [[ "$(uname -s 2>/dev/null)" == Darwin ]] && set -o globcasedetect 2>/dev/null
+    [[ "${OSTYPE:-}" == *darwin* ]] && set -o globcasedetect 2>/dev/null
 
     # -- History --------------------------------------------------------------
     HISTSIZE=${SANE.history_size:-50000}
