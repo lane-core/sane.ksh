@@ -7,6 +7,13 @@
 
 typeset -C -A _SANE_HOOKS
 
+# Pre-initialize all event slots so compound-associative subscript
+# access never hits a missing key (triggers nounset in trap context)
+for _sane_ev in precmd preexec chpwd vi-mode-change; do
+    _SANE_HOOKS[$_sane_ev]=(typeset -a handlers=())
+done
+unset _sane_ev
+
 # -- Register ----------------------------------------------------------------
 # Usage: sane_hook <event> <func>
 function sane_hook {
