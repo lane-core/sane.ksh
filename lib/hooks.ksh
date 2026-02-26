@@ -56,7 +56,8 @@ function sane_unhook {
 # Usage: _sane_fire <event> [args...]
 # Errors from handlers go to stderr but don't halt iteration.
 function _sane_fire {
-    typeset event="$1"; shift
+    typeset event="${1:-}"; shift 2>/dev/null
+    [[ -z "$event" ]] && return 0
 
     [[ -z "${_SANE_HOOKS[$event]+set}" ]] && return 0
 
