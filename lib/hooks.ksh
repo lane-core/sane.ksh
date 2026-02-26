@@ -63,13 +63,14 @@ function sane_unhook {
 # Usage: _sane_fire <event> [args...]
 # Errors from handlers go to stderr but don't halt iteration.
 function _sane_fire {
-    typeset event="${1:-}"; shift 2>/dev/null
-    [[ -z "$event" ]] && return 0
+    (( $# )) || return 0
+    [[ -z "${_SANE_HOOKS[$1]+set}" ]] && return 0
 
-    [[ -z "${_SANE_HOOKS[$event]+set}" ]] && return 0
-
-    typeset -i i n=${#_SANE_HOOKS[$event].handlers[@]}
-    for (( i = 0; i < n; i++ )); do
-        "${_SANE_HOOKS[$event].handlers[i]}" "$@" || true
+    # Avoid typeset -i and ${#...[@]} — both trigger ksh93u+m bugs when
+    # called from a DEBUG trap during compound variable assignment context.
+    # The for-in pattern iterates the array directly (empty → no iterations).
+    typeset _sf_h
+    for _sf_h in "${_SANE_HOOKS[$1].handlers[@]}"; do
+        [[ -n "$_sf_h" ]] && "$_sf_h" "${@:2}" || true
     done
 }
