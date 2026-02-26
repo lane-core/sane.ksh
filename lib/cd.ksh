@@ -56,23 +56,23 @@ function cd {
 
     # Pass-through: flags (-L, -P) and multi-arg forms go straight to builtin
     if (( $# > 1 )) || [[ "${1:-}" == -[LP] ]]; then
-        builtin cd "$@" || return
+        command cd "$@" || return
         _sane_fire chpwd "$old" "$PWD"
         return
     fi
 
-    typeset target="$1"
+    typeset target="${1:-}"
 
     # cd with no args → home
     if [[ -z "$target" ]]; then
-        builtin cd || return
+        command cd || return
         _sane_fire chpwd "$old" "$PWD"
         return
     fi
 
     # cd - → OLDPWD (standard behavior)
     if [[ "$target" == - ]]; then
-        builtin cd - || return
+        command cd - || return
         _sane_fire chpwd "$old" "$PWD"
         return
     fi
@@ -81,7 +81,7 @@ function cd {
     if [[ "$target" == @* ]]; then
         typeset mark="${target#@}"
         if [[ -n "${_SANE_MARKS[$mark]+set}" ]]; then
-            builtin cd "${_SANE_MARKS[$mark]}" || return
+            command cd "${_SANE_MARKS[$mark]}" || return
             _sane_fire chpwd "$old" "$PWD"
             return
         fi
@@ -93,7 +93,7 @@ function cd {
     if [[ "$target" == -+([0-9]) ]]; then
         typeset -i idx="${target#-}"
         if (( idx > 0 && idx <= ${#_SANE_DIRSTACK[@]} )); then
-            builtin cd "${_SANE_DIRSTACK[idx-1]}" || return
+            command cd "${_SANE_DIRSTACK[idx-1]}" || return
             _sane_fire chpwd "$old" "$PWD"
             return
         fi
@@ -103,14 +103,14 @@ function cd {
 
     # cd ./path, /path, ~/path → plain cd (path starts with . / / or ~)
     if [[ "$target" == .* || "$target" == /* || "$target" == '~'* ]]; then
-        builtin cd "$target" || return
+        command cd "$target" || return
         _sane_fire chpwd "$old" "$PWD"
         return
     fi
 
     # Plain path that exists as a directory → use it directly
     if [[ -d "$target" ]]; then
-        builtin cd "$target" || return
+        command cd "$target" || return
         _sane_fire chpwd "$old" "$PWD"
         return
     fi
@@ -122,13 +122,13 @@ function cd {
             print -u2 "sane: cd: no match for: ${target}"
             return 1
         }
-        builtin cd "$zdir" || return
+        command cd "$zdir" || return
         _sane_fire chpwd "$old" "$PWD"
         return
     fi
 
     # Nothing worked — plain cd as last resort (will produce its own error)
-    builtin cd "$target" || return
+    command cd "$target" || return
     _sane_fire chpwd "$old" "$PWD"
 }
 
@@ -168,6 +168,11 @@ function _sane_cd_init {
     [[ "${SANE.smart_cd:-true}" == false ]] && return 0
 
     _sane_cd_load
-    command -v zoxide >/dev/null 2>&1 && _SANE_HAS_ZOXIDE=true
+    if command -v zoxide >/dev/null 2>&1; then
+        _SANE_HAS_ZOXIDE=true
+        # Suppress zoxide's shell-hook doctor check — sane.ksh calls
+        # zoxide query/add directly, no shell hooks needed
+        export _ZO_DOCTOR=0
+    fi
     sane_hook chpwd _sane_chpwd_handler
 }
