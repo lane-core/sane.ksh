@@ -60,9 +60,9 @@ function sane_unhook {
 }
 
 # -- Fire ---------------------------------------------------------------------
-# Usage: _sane_fire <event> [args...]
+# Usage: sane_fire <event> [args...]
 # Errors from handlers go to stderr but don't halt iteration.
-function _sane_fire {
+function sane_fire {
     (( $# )) || return 0
     [[ -z "${_SANE_HOOKS[$1]+set}" ]] && return 0
 

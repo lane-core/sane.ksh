@@ -7,7 +7,7 @@
 #
 # Handlers that need to inject multi-char strings must use the inject
 # buffer (_SANE_INJECT_BUF) since .sh.edchar only processes one byte
-# per KEYBD invocation. Use _sane_inject to enqueue text.
+# per KEYBD invocation. Use sane_inject to enqueue text.
 
 # -- Dispatch tables ----------------------------------------------------------
 typeset -A _SANE_KEYS_INSERT     # vi insert / emacs mode
@@ -35,7 +35,7 @@ typeset    _SANE_KEY_PREV_MODE=''
 # Enqueue a string for injection into the editor one char at a time.
 # The first char is delivered immediately via .sh.edchar; the rest is
 # buffered for subsequent KEYBD invocations.
-function _sane_inject {
+function sane_inject {
     typeset str="$1"
     if [[ -n "$str" ]]; then
         .sh.edchar="${str:0:1}"
@@ -110,7 +110,7 @@ function _sane_keybd_dispatch {
     if [[ "$mode" != "$_SANE_KEY_PREV_MODE" ]]; then
         _SANE_KEY_PREV_MODE="$mode"
         _SANE_VI_MODE="$mode"
-        _sane_fire vi-mode-change "$mode"
+        sane_fire vi-mode-change "$mode"
     fi
 
     # -- Multi-char sequence handling -----------------------------------------
@@ -141,7 +141,7 @@ function _sane_keybd_dispatch {
 
     if [[ -n "$handler" ]]; then
         _SANE_KEY_SEQ=''
-        .sh.edchar=''    # suppress trigger; handler overrides via _sane_inject
+        .sh.edchar=''    # suppress trigger; handler overrides via sane_inject
         "$handler"
         return
     fi

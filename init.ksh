@@ -65,10 +65,13 @@ _sane_cd_init
 
 # -- Wire precmd via PS1 discipline -------------------------------------------
 # The .get discipline fires in the parent shell every time PS1 is expanded.
-# It returns an empty string so it's invisible in prompt output.
+# It captures $? (the previous command's exit code) before any hook machinery
+# clobbers it, then passes it through to precmd handlers as $1.
+typeset -i _SANE_LAST_EXIT=0
 typeset _sane_ps1_hook
 function _sane_ps1_hook.get {
-    _sane_fire precmd
+    _SANE_LAST_EXIT=$?
+    sane_fire precmd "$_SANE_LAST_EXIT"
     .sh.value=""
 }
 PS1="${_sane_ps1_hook}${PS1:-\$ }"
@@ -80,7 +83,7 @@ PS1="${_sane_ps1_hook}${PS1:-\$ }"
 # eval it into a wrapper function body. ksh93u+m's trap -p output is
 # formatted as `trap -- 'action' DEBUG` and is designed to be eval-safe.
 function _sane_preexec_handler {
-    _sane_fire preexec "${.sh.command:-}"
+    sane_fire preexec "${.sh.command:-}"
 }
 
 typeset _sane_prev_debug _sane_prev_action
@@ -111,8 +114,8 @@ _sane_install_keybd
 # -- pack.ksh ready hook (defensive reinstall) --------------------------------
 # set -o vi after plugin load can reset the KEYBD trap. If pack.ksh is
 # present, reinstall on the ready event (fires after all .kshrc processing).
-if typeset -f _pack_hook >/dev/null 2>&1; then
-    _pack_hook ready _sane_install_keybd
+if typeset -f pack_hook >/dev/null 2>&1; then
+    pack_hook ready _sane_install_keybd
 fi
 
 # -- FPATH + autoload ---------------------------------------------------------

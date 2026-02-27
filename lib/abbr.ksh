@@ -3,7 +3,7 @@
 # Type an abbreviation, press space or enter → the abbreviation is
 # replaced with its expansion inline. Uses the "kill and retype"
 # approach: Ctrl-U clears the line, then the rebuilt line with the
-# expansion is injected via _sane_inject.
+# expansion is injected via sane_inject.
 
 typeset -A _SANE_ABBR
 typeset _SANE_ABBR_POSITION=command   # cached from SANE.abbr_position at init
@@ -29,7 +29,7 @@ function _sane_abbr_expand {
 
     # Only expand when cursor is at end of a word (at EOL or before whitespace)
     if (( col < ${#line} )); then
-        [[ "${line:col:1}" != ' ' ]] && { _sane_inject "$trigger"; return; }
+        [[ "${line:col:1}" != ' ' ]] && { sane_inject "$trigger"; return; }
     fi
 
     # Extract the word before the cursor
@@ -39,7 +39,7 @@ function _sane_abbr_expand {
 
     # If no word, pass through
     if [[ -z "$word" ]]; then
-        _sane_inject "$trigger"
+        sane_inject "$trigger"
         return
     fi
 
@@ -49,14 +49,14 @@ function _sane_abbr_expand {
     # Position check: if command mode, only expand the first token
     if [[ "$_SANE_ABBR_POSITION" == command ]]; then
         if [[ "$prefix" == *[^[:space:]]* ]]; then
-            _sane_inject "$trigger"
+            sane_inject "$trigger"
             return
         fi
     fi
 
     # Look up the abbreviation
     if [[ -z "${_SANE_ABBR[$word]+set}" ]]; then
-        _sane_inject "$trigger"
+        sane_inject "$trigger"
         return
     fi
 
@@ -66,7 +66,7 @@ function _sane_abbr_expand {
     typeset newline="${prefix}${expansion}${after}"
 
     # Kill line (Ctrl-U) + retype rebuilt line + trigger char
-    _sane_inject $'\025'"${newline}${trigger}"
+    sane_inject $'\025'"${newline}${trigger}"
 }
 
 # -- Wire up KEYBD handlers ---------------------------------------------------

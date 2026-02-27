@@ -5,7 +5,7 @@
 #
 # Terminal handoff: fzf runs inside $() command substitution within the
 # KEYBD trap. ksh93's editor suspends, fzf takes over, result is captured
-# and injected via _sane_inject. Ctrl-L suffix forces a redraw.
+# and injected via sane_inject. Ctrl-L suffix forces a redraw.
 
 # -- Configuration -----------------------------------------------------------
 typeset _SANE_FZF_CMD=''
@@ -48,18 +48,18 @@ function _sane_fzf_history {
     typeset _q="${.sh.edtext}"
     result=$(fc -lnr 1 | eval "${_SANE_FZF_CMD} --query=\"\$_q\" +m") || {
         # User cancelled — redraw
-        _sane_inject $'\014'
+        sane_inject $'\014'
         return
     }
     # Kill current line, inject selected command, redraw
-    _sane_inject "${prefix}"$'\025'"${result}"$'\014'
+    sane_inject "${prefix}"$'\025'"${result}"$'\014'
 }
 
 # -- Ctrl-T: file finder -----------------------------------------------------
 function _sane_fzf_file {
     typeset result
     result=$(eval "$_SANE_FZF_FILE_CMD" | eval "${_SANE_FZF_CMD} -m") || {
-        _sane_inject $'\014'
+        sane_inject $'\014'
         return
     }
     # Quote each selected path separately (multi-select returns newline-separated)
@@ -70,20 +70,20 @@ function _sane_fzf_file {
         qresult+="$quoted "
     done <<< "$result"
     qresult="${qresult% }"
-    _sane_inject "${qresult}"$'\014'
+    sane_inject "${qresult}"$'\014'
 }
 
 # -- Alt-C: cd to directory ---------------------------------------------------
 function _sane_fzf_cd {
     typeset result
     result=$(eval "$_SANE_FZF_DIR_CMD" | eval "${_SANE_FZF_CMD} +m") || {
-        _sane_inject $'\014'
+        sane_inject $'\014'
         return
     }
     # Kill line, inject cd command (shell-quoted for spaces), execute, redraw
     typeset qresult
     printf -v qresult '%q' "$result"
-    _sane_inject $'\025'"cd ${qresult}"$'\n'
+    sane_inject $'\025'"cd ${qresult}"$'\n'
 }
 
 # -- Wire up bindings ---------------------------------------------------------

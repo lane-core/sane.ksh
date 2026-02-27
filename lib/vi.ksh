@@ -11,7 +11,7 @@ typeset _SANE_VI_MODE=insert
 # Opt-in: user registers via sane_bind "jk" _sane_vi_escape insert
 # Switches to command mode by injecting ESC into the editor.
 function _sane_vi_escape {
-    _sane_inject $'\E'
+    sane_inject $'\E'
 }
 
 # -- Mode query ---------------------------------------------------------------

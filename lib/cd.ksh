@@ -57,7 +57,7 @@ function cd {
     # Pass-through: flags (-L, -P) and multi-arg forms go straight to builtin
     if (( $# > 1 )) || [[ "${1:-}" == -[LP] ]]; then
         command cd "$@" || return
-        _sane_fire chpwd "$old" "$PWD"
+        sane_fire chpwd "$old" "$PWD"
         return
     fi
 
@@ -66,14 +66,14 @@ function cd {
     # cd with no args → home
     if [[ -z "$target" ]]; then
         command cd || return
-        _sane_fire chpwd "$old" "$PWD"
+        sane_fire chpwd "$old" "$PWD"
         return
     fi
 
     # cd - → OLDPWD (standard behavior)
     if [[ "$target" == - ]]; then
         command cd - || return
-        _sane_fire chpwd "$old" "$PWD"
+        sane_fire chpwd "$old" "$PWD"
         return
     fi
 
@@ -82,7 +82,7 @@ function cd {
         typeset mark="${target#@}"
         if [[ -n "${_SANE_MARKS[$mark]+set}" ]]; then
             command cd "${_SANE_MARKS[$mark]}" || return
-            _sane_fire chpwd "$old" "$PWD"
+            sane_fire chpwd "$old" "$PWD"
             return
         fi
         print -u2 "sane: cd: unknown bookmark: @${mark}"
@@ -94,7 +94,7 @@ function cd {
         typeset -i idx="${target#-}"
         if (( idx > 0 && idx <= ${#_SANE_DIRSTACK[@]} )); then
             command cd "${_SANE_DIRSTACK[idx-1]}" || return
-            _sane_fire chpwd "$old" "$PWD"
+            sane_fire chpwd "$old" "$PWD"
             return
         fi
         print -u2 "sane: cd: stack index out of range: ${target}"
@@ -104,14 +104,14 @@ function cd {
     # cd ./path, /path, ~/path → plain cd (path starts with . / / or ~)
     if [[ "$target" == .* || "$target" == /* || "$target" == '~'* ]]; then
         command cd "$target" || return
-        _sane_fire chpwd "$old" "$PWD"
+        sane_fire chpwd "$old" "$PWD"
         return
     fi
 
     # Plain path that exists as a directory → use it directly
     if [[ -d "$target" ]]; then
         command cd "$target" || return
-        _sane_fire chpwd "$old" "$PWD"
+        sane_fire chpwd "$old" "$PWD"
         return
     fi
 
@@ -123,13 +123,13 @@ function cd {
             return 1
         }
         command cd "$zdir" || return
-        _sane_fire chpwd "$old" "$PWD"
+        sane_fire chpwd "$old" "$PWD"
         return
     fi
 
     # Nothing worked — plain cd as last resort (will produce its own error)
     command cd "$target" || return
-    _sane_fire chpwd "$old" "$PWD"
+    sane_fire chpwd "$old" "$PWD"
 }
 
 # -- Bookmark management ------------------------------------------------------

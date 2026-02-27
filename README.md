@@ -52,7 +52,7 @@ sane_unbind $'\x01' insert
 
 The KEYBD trap dispatcher uses a precomputed prefix hash for O(1) lookups on every keystroke. Multi-char sequences accumulate with a configurable timeout (default 200ms).
 
-Handlers inject text via `_sane_inject`, which buffers multi-character strings and drains them one byte per KEYBD invocation (ksh93's `.sh.edchar` only processes one character at a time).
+Handlers inject text via `sane_inject`, which buffers multi-character strings and drains them one byte per KEYBD invocation (ksh93's `.sh.edchar` only processes one character at a time).
 
 ### Fish-Style Abbreviations
 
