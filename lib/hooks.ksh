@@ -24,19 +24,12 @@ function sane_hook {
     fi
 
     # Deduplicate
-    typeset -i i n
-    n=${#_SANE_HOOKS[$event].handlers[@]}
-    for (( i = 0; i < n; i++ )); do
-        [[ "${_SANE_HOOKS[$event].handlers[i]}" == "$func" ]] && return 0
+    typeset h
+    for h in "${_SANE_HOOKS[$event].handlers[@]}"; do
+        [[ "$h" == "$func" ]] && return 0
     done
 
-    # Full reassignment (not +=) for compound-array sub-field safety
-    typeset -a _cur=()
-    for (( i = 0; i < n; i++ )); do
-        _cur+=("${_SANE_HOOKS[$event].handlers[i]}")
-    done
-    _cur+=("$func")
-    _SANE_HOOKS[$event]=(typeset -a handlers=("${_cur[@]}"))
+    _SANE_HOOKS[$event].handlers+=("$func")
 }
 
 # -- Unregister ---------------------------------------------------------------
@@ -45,15 +38,11 @@ function sane_unhook {
     typeset event="$1" func="$2"
 
     [[ -z "${_SANE_HOOKS[$event]+set}" ]] && return 0
-    typeset -i n
-    n=${#_SANE_HOOKS[$event].handlers[@]}
-    (( n == 0 )) && return 0
 
     typeset -a new=()
-    typeset -i i
-    for (( i = 0; i < n; i++ )); do
-        [[ "${_SANE_HOOKS[$event].handlers[i]}" != "$func" ]] && \
-            new+=("${_SANE_HOOKS[$event].handlers[i]}")
+    typeset h
+    for h in "${_SANE_HOOKS[$event].handlers[@]}"; do
+        [[ "$h" != "$func" ]] && new+=("$h")
     done
 
     _SANE_HOOKS[$event]=(typeset -a handlers=("${new[@]}"))
@@ -66,9 +55,7 @@ function sane_fire {
     (( $# )) || return 0
     [[ -z "${_SANE_HOOKS[$1]+set}" ]] && return 0
 
-    # Avoid typeset -i and ${#...[@]} — both trigger ksh93u+m bugs when
-    # called from a DEBUG trap during compound variable assignment context.
-    # The for-in pattern iterates the array directly (empty → no iterations).
+    # for-in iterates directly — no index or count needed
     typeset _sf_h
     for _sf_h in "${_SANE_HOOKS[$1].handlers[@]}"; do
         [[ -n "$_sf_h" ]] && "$_sf_h" "${@:2}" || true
