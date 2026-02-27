@@ -1,0 +1,13 @@
+# crontab — guard against accidental crontab -r
+if [[ -t 0 ]]; then
+	typeset _ct_arg
+	for _ct_arg; do
+		[[ "$_ct_arg" == -*r* ]] && {
+			typeset _ct_reply
+			read _ct_reply?"crontab: clear your crontab? (yes/no) "
+			[[ "$_ct_reply" == [Yy]* ]] || { print -u2 "crontab: cancelled."; return 1; }
+			break
+		}
+	done
+fi
+command crontab "$@"
