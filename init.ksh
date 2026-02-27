@@ -16,8 +16,8 @@
 [[ -n "${_SANE_KSH_INIT:-}" ]] && return 0
 
 # -- Version check ------------------------------------------------------------
-if [[ "${.sh.version}" != *93u+m* ]]; then
-    print -u2 "sane.ksh: requires ksh93u+m (found: ${.sh.version})"
+if [[ "${.sh.version}" != *93u+m* && "${.sh.version}" != *ksh26* ]]; then
+    print -u2 "sane.ksh: requires ksh93u+m or ksh26 (found: ${.sh.version})"
     return 1
 fi
 
